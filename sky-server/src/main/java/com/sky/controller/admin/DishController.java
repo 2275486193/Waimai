@@ -93,4 +93,29 @@ public class DishController {
         dishService.updateWithFlavor(dishDTO);
         return Result.success();
     }
+
+    /**
+     * 启用禁用菜品
+     * @return
+     */
+    @PostMapping("/status/{status}")
+    @ApiOperation("启用禁用菜品")
+    public Result startOrStop(@PathVariable Integer status,@RequestParam Long id){
+        log.info("菜品启用禁用：{},{}",status,id);
+        dishService.startOrStop(status,id);
+        return Result.success();
+    }
+
+    /**
+     * 根据分类id查询菜品
+     * @param categoryId
+     * @return
+     */
+    @GetMapping("/list")
+    @ApiOperation("根据分类id查询菜品")
+    public Result<List<Dish>> list(Long categoryId){
+        log.info("根据分类id查询菜品:{}",categoryId);
+        List<Dish> dishes =  dishService.list(categoryId);
+        return Result.success(dishes);
+    }
 }
