@@ -15,8 +15,6 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.util.UUID;
 
-import static jdk.nashorn.internal.runtime.regexp.joni.Config.log;
-
 /**
  * 通用接口
  */
