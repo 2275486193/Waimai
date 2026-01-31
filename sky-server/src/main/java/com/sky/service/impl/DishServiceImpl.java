@@ -8,10 +8,13 @@ import com.sky.dto.DishDTO;
 import com.sky.dto.DishPageQueryDTO;
 import com.sky.entity.Dish;
 import com.sky.entity.DishFlavor;
+import com.sky.entity.Setmeal;
 import com.sky.exception.DeletionNotAllowedException;
+import com.sky.exception.DishDisableFailedException;
 import com.sky.mapper.DishFlavorMapper;
 import com.sky.mapper.DishMapper;
 import com.sky.mapper.SetmealDishMapper;
+import com.sky.mapper.SetmealMapper;
 import com.sky.result.PageResult;
 import com.sky.service.DishService;
 import com.sky.vo.DishVO;
@@ -21,6 +24,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -34,8 +38,11 @@ public class DishServiceImpl implements DishService {
     private DishFlavorMapper dishFlavorMapper;
     @Autowired
     private SetmealDishMapper setmealDishMapper;
+    @Autowired
+    private SetmealMapper setmealMapper;
+
     /**
-     *
+     *添加菜品
      * @param dishDTO
      */
     @Transactional
@@ -145,13 +152,38 @@ public class DishServiceImpl implements DishService {
         }
     }
 
-    @Override
+    /**
+     * 启用禁用菜品和对应套餐
+     * @param status
+     * @param id
+     */
+    @Transactional
     public void startOrStop(Integer status, Long id) {
+//        //禁用需要检查有无套餐启用中
+//        if(status == StatusConstant.DISABLE){
+//            List<Long> setmealIds = setmealDishMapper.getSetmealIdsByDishIds(Arrays.asList(id));
+//            for(Long setmealId : setmealIds){
+//                Setmeal setmeal = setmealMapper.getById(setmealId);
+//                if(setmeal.getStatus() == StatusConstant.ENABLE){
+//                    throw new DishDisableFailedException(MessageConstant.DISH_DISABLE_FAILED);
+//                }
+//            }
+//        }
         Dish dish = Dish.builder()
                 .id(id)
                 .status(status)
                 .build();
         dishMapper.update(dish);
+        if(status == StatusConstant.DISABLE){
+            List<Long> setmealIds = setmealDishMapper.getSetmealIdsByDishIds(Arrays.asList(id));
+            for(Long setmealId : setmealIds){
+                Setmeal setmeal = Setmeal.builder()
+                        .id(setmealId)
+                        .status(status)
+                        .build();
+                setmealMapper.update(setmeal);
+            }
+        }
         return;
     }
 
@@ -162,7 +194,10 @@ public class DishServiceImpl implements DishService {
      */
     public List<Dish> list(Long categoryId) {
 
-        List<Dish> dishes =  dishMapper.list(categoryId);
-        return dishes;
+        Dish dish = Dish.builder()
+                .categoryId(categoryId)
+                .status(StatusConstant.ENABLE)
+                .build();
+        return dishMapper.list(dish);
     }
 }
